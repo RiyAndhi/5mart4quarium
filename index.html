@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>Smart Aquarium</title>
+  <link rel="icon" href="icon.png" type="image/png">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00ffcc" />
   <style>
     html, body {
       height: 100%;
@@ -215,5 +218,14 @@
       db.ref("kontrol/pakan").set(true);
     }
   </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registered"))
+        .catch(error => console.error("Service Worker registration failed:", error));
+    }
+  </script>
+
 </body>
 </html>
