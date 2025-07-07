@@ -16,7 +16,6 @@
       background-size: cover;
       color: #00ffcc;
       text-align: center;
-      padding-top: 20px;
       padding: 20px 16px;
     }
     h1, h2 {
@@ -96,6 +95,7 @@
       <button onclick="toggleKontrol('lampu')">Toggle Lampu</button>
       <button onclick="toggleKontrol('kipas')">Toggle Kipas</button>
       <button onclick="beriPakan()">Beri Pakan</button>
+      <button onclick="logout()">Logout</button>
     </div>
   </div>
 
@@ -104,6 +104,54 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <script>
     let db;
+    let inactivityTimer;
+
+    // Reset session timeout on activity
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        logout();
+        alert("Sesi Anda telah berakhir karena tidak aktif selama 10 menit.");
+      }, 10 * 60 * 1000); // 10 menit
+    }
+
+    // Event listener aktivitas user
+    ['click', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, resetInactivityTimer);
+    });
+
+    // Inisialisasi Firebase dan cek sesi login
+    window.onload = function () {
+      const savedConfig = JSON.parse(localStorage.getItem('firebaseConfig'));
+      const savedEmail = localStorage.getItem('userEmail');
+      const savedPass = localStorage.getItem('userPassword');
+
+      if (savedConfig && savedEmail && savedPass) {
+        firebase.initializeApp(savedConfig);
+
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            db = firebase.database();
+            document.getElementById("configForm").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            monitorData();
+            resetInactivityTimer();
+          } else {
+            firebase.auth().signInWithEmailAndPassword(savedEmail, savedPass)
+              .then(() => {
+                db = firebase.database();
+                document.getElementById("configForm").style.display = "none";
+                document.getElementById("dashboard").style.display = "block";
+                monitorData();
+                resetInactivityTimer();
+              })
+              .catch(() => {
+                localStorage.clear();
+              });
+          }
+        });
+      }
+    };
 
     function initFirebase() {
       const apiKey = document.getElementById("apiKey").value.trim();
@@ -125,8 +173,21 @@
           document.getElementById("configForm").style.display = "none";
           document.getElementById("dashboard").style.display = "block";
           monitorData();
+          resetInactivityTimer();
+
+          // Simpan konfigurasi sementara untuk sesi
+          localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userPassword', password);
         })
         .catch(err => alert("Login Gagal: " + err.message));
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        localStorage.clear();
+        location.reload();
+      });
     }
 
     function monitorData() {
