@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Aquarium Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .card {
+      background-color: #fff;
+      padding: 20px;
+      margin: 10px auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+    input, button, select {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Smart Aquarium Control</h1>
+
+  <div id="configForm" class="card">
+    <h2>Firebase Config</h2>
+    <input type="text" id="apiKey" placeholder="API Key" required />
+    <input type="text" id="databaseURL" placeholder="Database URL" required />
+    <input type="email" id="userEmail" placeholder="Email" required />
+    <input type="password" id="userPassword" placeholder="Password" required />
+    <button onclick="initFirebase()">Connect</button>
+  </div>
+
+  <div id="dashboard" class="card" style="display:none;">
+    <h2>Status</h2>
+    <p>Suhu: <span id="suhu">-</span> °C</p>
+    <p>Sisa Pakan: <span id="pakan">-</span>%</p>
+    <p>Suhu Maksimum: <span id="setSuhu">-</span>°C</p>
+    <input type="range" min="20" max="40" id="setSuhuInput" />
+    <button onclick="updateSuhuMax()">Set Suhu Maksimum</button>
+
+    <div class="controls">
+      <button onclick="toggleKontrol('lampu')">Toggle Lampu</button>
+      <button onclick="toggleKontrol('kipas')">Toggle Kipas</button>
+      <button onclick="beriPakan()">Beri Pakan</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script>
+    let db;
+
+    function initFirebase() {
+      const apiKey = document.getElementById("apiKey").value.trim();
+      const databaseURL = document.getElementById("databaseURL").value.trim();
+      const email = document.getElementById("userEmail").value.trim();
+      const password = document.getElementById("userPassword").value;
+
+      if (!apiKey || !databaseURL || !email || !password) {
+        alert("Mohon isi semua data.");
+        return;
+      }
+
+      const firebaseConfig = { apiKey, databaseURL };
+      firebase.initializeApp(firebaseConfig);
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+          db = firebase.database();
+          document.getElementById("configForm").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+          monitorData();
+        })
+        .catch(err => alert("Login Gagal: " + err.message));
+    }
+
+    function monitorData() {
+      db.ref("monitoring/suhu").on("value", snap => {
+        document.getElementById("suhu").innerText = snap.val();
+      });
+      db.ref("monitoring/pakan").on("value", snap => {
+        document.getElementById("pakan").innerText = snap.val();
+      });
+      db.ref("monitoring/setSuhu").on("value", snap => {
+        document.getElementById("setSuhu").innerText = snap.val();
+        document.getElementById("setSuhuInput").value = snap.val();
+      });
+    }
+
+    function updateSuhuMax() {
+      const suhuBaru = parseInt(document.getElementById("setSuhuInput").value);
+      db.ref("monitoring/setSuhu").set(suhuBaru);
+    }
+
+    function toggleKontrol(nama) {
+      const ref = db.ref("kontrol/" + nama);
+      ref.once("value").then(snap => {
+        ref.set(!snap.val());
+      });
+    }
+
+    function beriPakan() {
+      db.ref("kontrol/pakan").set(true);
+    }
+  </script>
+</body>
+</html>
 
