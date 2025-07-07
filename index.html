@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Aquarium Control</title>
+  <title>Smart Aquarium</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html, body {
@@ -106,21 +106,18 @@
     let db;
     let inactivityTimer;
 
-    // Reset session timeout on activity
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
         logout();
-        alert("Sesi Anda telah berakhir karena tidak aktif selama 10 menit.");
-      }, 10 * 60 * 1000); // 10 menit
+        alert("Sesi Anda telah berakhir.");
+      }, 10 * 60 * 1000);
     }
 
-    // Event listener aktivitas user
     ['click', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
       window.addEventListener(evt, resetInactivityTimer);
     });
 
-    // Inisialisasi Firebase dan cek sesi login
     window.onload = function () {
       const savedConfig = JSON.parse(localStorage.getItem('firebaseConfig'));
       const savedEmail = localStorage.getItem('userEmail');
@@ -175,7 +172,6 @@
           monitorData();
           resetInactivityTimer();
 
-          // Simpan konfigurasi sementara untuk sesi
           localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userPassword', password);
