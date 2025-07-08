@@ -169,8 +169,7 @@
     document.getElementById('userDB').innerText = config.databaseURL || '-';
     document.getElementById('statusCircle').className = 'status-circle loading';
 
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
       .then(() => auth.signInWithEmailAndPassword(email, password))
       .then(() => {
         const statusRef = db.ref('status');

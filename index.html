@@ -114,19 +114,21 @@
     });
 
     window.addEventListener('load', function () {
-      const splash = document.getElementById('splashScreen');
-    
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          window.location.href = 'main.html';
-        } else {
-          setTimeout(() => {
-            splash.style.opacity = 0;
-            splash.style.transition = 'opacity 0.4s ease';
-            setTimeout(() => splash.style.display = 'none', 400);
-          }, 1000);
-        }
-      });
+      const config = sessionStorage.getItem('firebaseConfig');
+      const email = sessionStorage.getItem('email');
+      const password = sessionStorage.getItem('password');
+
+      if (config && email && password) {
+        window.location.href = 'main.html';
+        return;
+      }
+
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        splash.style.opacity = 0;
+        splash.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => splash.style.display = 'none', 400);
+      }, 1000);
     });
 
     if ('serviceWorker' in navigator) {
