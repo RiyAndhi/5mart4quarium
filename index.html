@@ -1,232 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Aquarium</title>
-  <link rel="icon" href="icon.png" type="image/png">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Aquarium - Login</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#00ffcc" />
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: 'Courier New', monospace;
-      background: linear-gradient(135deg, #2e004f, #000000);
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      background-size: cover;
-      color: #00ffcc;
-      text-align: center;
-      padding: 20px 16px;
-    }
-    h1, h2 {
-      color: #ff00cc;
-      text-shadow: 2px 2px #000;
-    }
-    .card {
-      background-color: #111;
-      border: 3px solid #00ffcc;
-      padding: 20px;
-      margin: 15px auto;
-      border-radius: 15px;
-      box-shadow: 0 0 10px #00ffcc;
-      max-width: 500px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    input, button, select {
-      width: 90%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
-      font-family: 'Courier New', monospace;
-      background-color: #222;
-      color: #00ffcc;
-      border: 2px solid #00ffcc;
-      border-radius: 8px;
-    }
-    input::placeholder {
-      color: #999;
-    }
-    button:hover {
-      background-color: #00ffcc;
-      color: #000;
-      cursor: pointer;
-    }
-    .controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .controls button {
-      margin: 5px 0;
-    }
-    @media (max-width: 480px) {
-      h1, h2 {
-        font-size: 1.4em;
-      }
-
-      input, button {
-        font-size: 14px;
-      }
-    }
-  </style>
+  <meta name="theme-color" content="#2196f3" />
 </head>
 <body>
-  <!-- <h1>Smart Aquarium</h1> -->
-
-  <div id="configForm" class="card">
-    <h2>Smart Aquarium</h2>
-    <input type="text" id="apiKey" placeholder="API Key" required />
-    <input type="text" id="databaseURL" placeholder="Database URL" required />
-    <input type="email" id="userEmail" placeholder="Email" required />
-    <input type="password" id="userPassword" placeholder="Password" required />
-    <button onclick="initFirebase()">Connect</button>
+  <div id="splashScreen">
+    <div class="spinner"></div>
   </div>
 
-  <div id="dashboard" class="card" style="display:none;">
-    <h2>Dashboard</h2>
-    <h2>Smart Aquarium</h2>
-    <p>Suhu: <span id="suhu">-</span> °C</p>
-    <p>Sisa Pakan: <span id="pakan">-</span>%</p>
-    <p>Suhu Maksimum: <span id="setSuhu">-</span>°C</p>
-    <input type="range" min="20" max="40" id="setSuhuInput" />
-    <button onclick="updateSuhuMax()">Set Suhu Maksimum</button>
+  <div class="login-container">
+    <div class="logo">
+      <i class="fas fa-fish"></i>
+    </div>
+    <h1>Smart Aquarium</h1>
 
-    <div class="controls">
-      <button onclick="toggleKontrol('lampu')">Toggle Lampu</button>
-      <button onclick="toggleKontrol('kipas')">Toggle Kipas</button>
-      <button onclick="beriPakan()">Beri Pakan</button>
-      <button onclick="logout()">Logout</button>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="apiKey">API Key</label>
+        <input type="text" id="apiKey" name="apiKey" required />
+      </div>
+
+      <div class="form-group">
+        <label for="databaseUrl">Database URL</label>
+        <input type="url" id="databaseUrl" name="databaseUrl" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-container">
+          <input type="password" id="password" name="password" required />
+          <i class="fas fa-eye password-toggle" onclick="togglePassword()"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="connect-btn">
+        <i class="fas fa-plug"></i> Connect
+      </button>
+    </form>
+  </div>
+
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-content">
+      <i class="fas fa-spinner fa-spin fa-2x"></i>
+      <p>Memuat dashboard...</p>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-  <script>
-    let db;
-    let inactivityTimer;
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-    function resetInactivityTimer() {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        logout();
-        alert("Sesi Anda telah berakhir.");
-      }, 10 * 60 * 1000);
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.querySelector('.password-toggle');
+
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
     }
 
-    ['click', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
-      window.addEventListener(evt, resetInactivityTimer);
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const apiKey = document.getElementById('apiKey').value;
+      const databaseUrl = document.getElementById('databaseUrl').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const firebaseConfig = {
+        apiKey: apiKey,
+        authDomain: "dummy.firebaseapp.com",
+        databaseURL: databaseUrl,
+      };
+
+      const tempApp = firebase.initializeApp(firebaseConfig, "tempApp");
+      const tempAuth = firebase.auth(tempApp);
+
+      const btn = document.querySelector('.connect-btn');
+      const loading = document.getElementById('loadingScreen');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      btn.disabled = true;
+      loading.style.display = 'flex';
+
+      tempAuth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          sessionStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
+          sessionStorage.setItem('email', email);
+          sessionStorage.setItem('password', password);
+          window.location.href = 'main.html';
+        })
+        .catch((error) => {
+          alert('Login gagal: ' + error.message);
+          btn.innerHTML = '<i class="fas fa-plug"></i> Connect';
+          btn.disabled = false;
+          loading.style.display = 'none';
+        });
     });
 
-    window.onload = function () {
-      const savedConfig = JSON.parse(localStorage.getItem('firebaseConfig'));
-      const savedEmail = localStorage.getItem('userEmail');
-      const savedPass = localStorage.getItem('userPassword');
+    window.addEventListener('load', function () {
+      const config = sessionStorage.getItem('firebaseConfig');
+      const email = sessionStorage.getItem('email');
+      const password = sessionStorage.getItem('password');
 
-      if (savedConfig && savedEmail && savedPass) {
-        firebase.initializeApp(savedConfig);
-
-        firebase.auth().onAuthStateChanged(user => {
-          if (user) {
-            db = firebase.database();
-            document.getElementById("configForm").style.display = "none";
-            document.getElementById("dashboard").style.display = "block";
-            monitorData();
-            resetInactivityTimer();
-          } else {
-            firebase.auth().signInWithEmailAndPassword(savedEmail, savedPass)
-              .then(() => {
-                db = firebase.database();
-                document.getElementById("configForm").style.display = "none";
-                document.getElementById("dashboard").style.display = "block";
-                monitorData();
-                resetInactivityTimer();
-              })
-              .catch(() => {
-                localStorage.clear();
-              });
-          }
-        });
-      }
-    };
-
-    function initFirebase() {
-      const apiKey = document.getElementById("apiKey").value.trim();
-      const databaseURL = document.getElementById("databaseURL").value.trim();
-      const email = document.getElementById("userEmail").value.trim();
-      const password = document.getElementById("userPassword").value;
-
-      if (!apiKey || !databaseURL || !email || !password) {
-        alert("Mohon isi semua data.");
+      if (config && email && password) {
+        window.location.href = 'main.html';
         return;
       }
 
-      const firebaseConfig = { apiKey, databaseURL };
-      firebase.initializeApp(firebaseConfig);
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        splash.style.opacity = 0;
+        splash.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => splash.style.display = 'none', 400);
+      }, 1000);
+    });
 
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-          db = firebase.database();
-          document.getElementById("configForm").style.display = "none";
-          document.getElementById("dashboard").style.display = "block";
-          monitorData();
-          resetInactivityTimer();
-
-          localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
-          localStorage.setItem('userEmail', email);
-          localStorage.setItem('userPassword', password);
-        })
-        .catch(err => alert("Login Gagal: " + err.message));
-    }
-
-    function logout() {
-      firebase.auth().signOut().then(() => {
-        localStorage.clear();
-        location.reload();
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
       });
-    }
-
-    function monitorData() {
-      db.ref("monitoring/suhu").on("value", snap => {
-        document.getElementById("suhu").innerText = snap.val();
-      });
-      db.ref("monitoring/pakan").on("value", snap => {
-        document.getElementById("pakan").innerText = snap.val();
-      });
-      db.ref("monitoring/setSuhu").on("value", snap => {
-        document.getElementById("setSuhu").innerText = snap.val();
-        document.getElementById("setSuhuInput").value = snap.val();
-      });
-    }
-
-    function updateSuhuMax() {
-      const suhuBaru = parseInt(document.getElementById("setSuhuInput").value);
-      db.ref("monitoring/setSuhu").set(suhuBaru);
-    }
-
-    function toggleKontrol(nama) {
-      const ref = db.ref("kontrol/" + nama);
-      ref.once("value").then(snap => {
-        ref.set(!snap.val());
-      });
-    }
-
-    function beriPakan() {
-      db.ref("kontrol/pakan").set(true);
     }
   </script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker registered"))
-        .catch(error => console.error("Service Worker registration failed:", error));
-    }
-  </script>
-
 </body>
 </html>
