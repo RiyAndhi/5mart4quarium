@@ -152,6 +152,10 @@ body {
   text-align: center;
 }
 
+.temperature-control {
+  padding: 25px 35px;
+}
+
 .feed-btn {
   align-items: center;
   background: linear-gradient(135deg, #ffa726, #ff9800);
