@@ -250,7 +250,6 @@ body {
 
 .switch-item.inactive {
   background-color: #fff7f7;
-  border-radius: 8px;
 }
 
 .switch-item.inactive .switch-label {
