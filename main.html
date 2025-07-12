@@ -55,12 +55,28 @@
       <span id="statusCircle" class="status-circle loading"></span>
       <h1>Smart Aquarium</h1>
     </div>
-    <div style="text-align:center;color:#ccc;font-size:0.85rem;margin-top:5px;">
-      Terakhir Aktif: <span id="lastSeenText">--</span>
-    </div>
+    <div id="statusText" class="status-text">Loading...</div>
   </div>
 
   <div class="container">
+    <!-- KAMERA SECTION -->
+    <div id="kameraTab" class="tab-section">
+      <div class="camera-card">
+        <h3 style="margin-bottom: 16px; color:#444;">Pemantauan Visual</h3>
+
+        <div class="fake-camera-screen">
+          <div class="overlay">
+            <i class="fas fa-video fa-2x"></i>
+            <h4>Coming Soon</h4>
+          </div>
+        </div>
+
+        <p style="color:#666; margin-top: 18px;">
+          Kamera akan membantu Anda memantau aktivitas ikan, pencahayaan, dan kebersihan akuarium secara langsung. Pantau dari mana saja untuk memastikan kondisi tetap optimal.
+        </p>
+      </div>
+    </div>
+
     <!-- DASHBOARD SECTION -->
     <div id="dashboardTab" class="tab-section active">
       <div class="status-grid">
@@ -136,6 +152,10 @@
   </div>
 
   <div class="bottom-nav">
+    <a href="#" class="nav-item" onclick="switchTab('kameraTab', this)">
+      <i class="fas fa-camera"></i>
+      <span>Kamera</span>
+    </a>
     <a href="#" class="nav-item" onclick="switchTab('dashboardTab', this)">
       <i class="fas fa-tachometer-alt"></i>
       <span>Dashboard</span>
@@ -169,6 +189,7 @@
     document.getElementById('userEmail').innerText = email;
     document.getElementById('userDB').innerText = config.databaseURL || '-';
     document.getElementById('statusCircle').className = 'status-circle loading';
+    document.getElementById('statusText').innerText = 'Mengecek status...';
 
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
       .then(() => auth.signInWithEmailAndPassword(email, password))
@@ -178,13 +199,24 @@
 
         statusRef.on('value', (snapshot) => {
           const circle = document.getElementById('statusCircle');
-          const lastSeenEl = document.getElementById('lastSeenText');
+          const statusText = document.getElementById('statusText');
           const status = snapshot.val();
 
           lastSeenTime = Date.now();
           perangkatOnline = status?.isOnline || false;
-          circle.className = perangkatOnline ? 'status-circle online' : 'status-circle offline';
-          lastSeenEl.innerText = status?.lastSeen || '--';
+
+          if (perangkatOnline) {
+            circle.className = 'status-circle online';
+            statusText.innerText = 'Online';
+          } else {
+            circle.className = 'status-circle offline';
+            const lastSeen = status?.lastSeen;
+            if (lastSeen) {
+              statusText.innerText = 'Terakhir Aktif: ' + lastSeen;
+            } else {
+              statusText.innerText = 'Terakhir Aktif: --';
+            }
+          }
 
           updateMonitoringDisplay();
           updateKontrolDisplay();
