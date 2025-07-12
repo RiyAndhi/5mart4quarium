@@ -1,6 +1,6 @@
 {
   "name": "Smart Aquarium",
-  "short_name": "Aquarium",
+  "short_name": "Smart Aquarium",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",

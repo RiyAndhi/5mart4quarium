@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Aquarium</title>
+  <link rel="icon" href="assets/img/icon.png" type="image/png">
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <div class="title-wrapper">
+      <span id="statusCircle" class="status-circle loading"></span>
+      <h1>Smart Aquarium</h1>
+    </div>
+    <div id="statusText" class="status-text">Loading...</div>
+  </div>
+
+  <div class="container">
+    <!-- KAMERA SECTION -->
+    <div id="kameraTab" class="tab-section">
+      <div class="camera-card">
+        <h3 style="margin-bottom: 16px; color:#444;">Live Monitoring</h3>
+
+        <div class="fake-camera-screen">
+          <div class="overlay">
+            <i class="fas fa-video fa-2x"></i>
+            <h4>Coming Soon</h4>
+          </div>
+        </div>
+
+        <p style="color:#666; margin-top: 18px;">
+          Fitur Live Monitoring memungkinkan Anda memantau kondisi akuarium secara langsung melalui kamera. Pantau aktivitas ikan, pencahayaan, dan kebersihan air dari mana saja secara real-time untuk menjaga lingkungan akuarium tetap optimal dan nyaman bagi penghuni air Anda.
+        </p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboardTab" class="tab-section active">
+      <div class="status-grid">
+        <div class="status-card temperature">
+          <div class="status-icon"><i class="fas fa-thermometer-half"></i></div>
+          <div class="status-value" id="suhuDisplay">--</div>
+          <div class="status-label">Suhu Air</div>
+        </div>
+        <div class="status-card food">
+          <div class="status-icon"><i class="fas fa-bowl-food"></i></div>
+          <div class="status-value" id="pakanDisplay">--</div>
+          <div class="status-label">Sisa Pakan</div>
+        </div>
+      </div>
+
+      <div class="feed-section">
+        <button class="feed-btn" onclick="feedFish()">
+          <i class="fas fa-utensils"></i> Beri Makan
+        </button>
+      </div>
+
+      <div class="temperature-control">
+        <div class="suhu-display-above">Suhu Maks: <span id="setSuhuDisplay">--</span>°C</div>
+        <div class="slider-container">
+          <input type="range" min="20" max="40" value="31" class="temp-slider" id="tempSlider">
+          <button class="set-btn" onclick="setTemperature()">SET</button>
+        </div>
+        <div id="tempPreview" class="temp-preview" style="display: none;">
+          Kipas akan menyala otomatis saat suhu mencapai: <span id="tempValue">--</span>°C
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <h3 class="controls-title">Kontrol Perangkat</h3>
+        <div class="switch-grid">
+          <div class="switch-item">
+            <span class="switch-label">Saklar 1 (Lampu)</span>
+            <label class="switch">
+              <input type="checkbox" id="lampuSwitch" onchange="toggleDevice('lampu', this)">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="switch-item">
+            <span class="switch-label">Saklar 2 (Kipas)</span>
+            <label class="switch">
+              <input type="checkbox" id="kipasSwitch" onchange="toggleDevice('kipas', this)">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="switch-item inactive">
+            <span class="switch-label">Saklar 3 (Belum Aktif)</span>
+            <label class="switch">
+              <input type="checkbox" id="saklar3Switch" disabled>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="switch-item inactive">
+            <span class="switch-label">Saklar 4 (Belum Aktif)</span>
+            <label class="switch">
+              <input type="checkbox" id="saklar4Switch" disabled>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AKUN SECTION -->
+    <div id="akunTab" class="tab-section">
+      <div class="akun-card">
+        <h3>Informasi Akun</h3>
+        <div class="akun-info-table">
+          <div class="info-row">
+            <i class="fas fa-envelope info-icon"></i>
+            <div class="info-value" id="userEmail">-</div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-database info-icon"></i>
+            <div class="info-value" id="userDB">-</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="#" class="nav-item" onclick="switchTab('kameraTab', this)">
+      <i class="fas fa-video"></i>
+      <span>Live Monitoring</span>
+    </a>
+    <a href="#" class="nav-item" onclick="switchTab('dashboardTab', this)">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" onclick="switchTab('akunTab', this)">
+      <i class="fas fa-user"></i>
+      <span>Akun</span>
+    </a>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    const configStr = sessionStorage.getItem('firebaseConfig');
+    const email = sessionStorage.getItem('email');
+    const password = sessionStorage.getItem('password');
+    let perangkatOnline = false;
+
+    if (!configStr || !email || !password) {
+      alert('Silakan login terlebih dahulu!');
+      window.location.href = 'index.html';
+    }
+
+    const config = JSON.parse(configStr);
+    const app = firebase.initializeApp(config);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    document.getElementById('userEmail').innerText = email;
+    document.getElementById('userDB').innerText = config.databaseURL || '-';
+    document.getElementById('statusCircle').className = 'status-circle loading';
+    document.getElementById('statusText').innerText = 'Mengecek status...';
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+      .then(() => auth.signInWithEmailAndPassword(email, password))
+      .then(() => {
+        const statusRef = db.ref('status');
+        let lastSeenTime = 0;
+
+        statusRef.on('value', (snapshot) => {
+          const circle = document.getElementById('statusCircle');
+          const statusText = document.getElementById('statusText');
+          const status = snapshot.val();
+
+          lastSeenTime = Date.now();
+          perangkatOnline = status?.isOnline || false;
+
+          if (perangkatOnline) {
+            circle.className = 'status-circle online';
+            statusText.innerText = 'Online';
+          } else {
+            circle.className = 'status-circle offline';
+            const lastSeen = status?.lastSeen;
+            if (lastSeen) {
+              statusText.innerText = 'Terakhir Aktif: ' + lastSeen;
+            } else {
+              statusText.innerText = 'Terakhir Aktif: --';
+            }
+          }
+
+          updateMonitoringDisplay();
+          updateKontrolDisplay();
+        });
+
+        setInterval(() => {
+          const now = Date.now();
+          if (now - lastSeenTime > 15000 && perangkatOnline) {
+            perangkatOnline = false;
+            document.getElementById('statusCircle').className = 'status-circle offline';
+            updateMonitoringDisplay();
+            updateKontrolDisplay();
+            db.ref('status/isOnline').set(false);
+          }
+        }, 5000);
+
+        const suhuDisplay = document.getElementById('suhuDisplay');
+        const pakanDisplay = document.getElementById('pakanDisplay');
+        const setSuhuDisplay = document.getElementById('setSuhuDisplay');
+        const tempSlider = document.getElementById('tempSlider');
+        const tempValue = document.getElementById('tempValue');
+
+        function updateMonitoringDisplay() {
+          if (!perangkatOnline) {
+            suhuDisplay.innerText = 'N/A';
+            pakanDisplay.innerText = 'N/A';
+            setSuhuDisplay.innerText = '--';
+            tempSlider.disabled = true;
+            tempValue.innerText = '--';
+          } else {
+            tempSlider.disabled = false;
+          }
+        }
+
+        function updateKontrolDisplay() {
+          document.getElementById('lampuSwitch').disabled = !perangkatOnline;
+          document.getElementById('kipasSwitch').disabled = !perangkatOnline;
+          document.querySelector('.set-btn').disabled = !perangkatOnline;
+          document.querySelector('.feed-btn').disabled = !perangkatOnline;
+        }
+
+        const ref = db.ref();
+        ref.child('monitoring').on('value', (snapshot) => {
+          if (!perangkatOnline) return;
+
+          const data = snapshot.val();
+          const suhu = data?.suhu;
+          const pakan = data?.pakan;
+          const setSuhu = data?.setSuhu;
+
+          suhuDisplay.innerText = isNaN(suhu) || suhu < 0 ? 'N/A' : suhu + '°C';
+          pakanDisplay.innerText = !isNaN(pakan) ? pakan + '%' : 'N/A';
+          setSuhuDisplay.innerText = setSuhu ?? '--';
+          tempSlider.value = setSuhu ?? 30;
+          tempValue.innerText = setSuhu ?? '--';
+        });
+
+        ref.child('kontrol').on('value', (snapshot) => {
+          if (!perangkatOnline) return;
+
+          const data = snapshot.val();
+          document.getElementById('lampuSwitch').checked = !!data.lampu;
+          document.getElementById('kipasSwitch').checked = !!data.kipas;
+        });
+
+        let idleTimer;
+        const timeoutMs = 5 * 60 * 1000;
+        function resetIdleTimer() {
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
+            alert("Anda telah logout karena tidak ada aktivitas.");
+            auth.signOut().then(() => {
+              sessionStorage.clear();
+              window.location.href = "index.html";
+            });
+          }, timeoutMs);
+        }
+        ['click', 'mousemove', 'keypress', 'scroll'].forEach(evt => {
+          document.addEventListener(evt, resetIdleTimer, false);
+        });
+        resetIdleTimer();
+      })
+      .catch(err => {
+        alert('Autentikasi gagal: ' + err.message);
+        window.location.href = 'index.html';
+      });
+
+    function toggleDevice(device, element) {
+      if (!perangkatOnline) return;
+      firebase.database().ref('kontrol/' + device).set(element.checked);
+    }
+
+    function setTemperature() {
+      if (!perangkatOnline) return;
+      const suhu = parseInt(document.getElementById('tempSlider').value);
+      const btn = document.querySelector('.set-btn');
+
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      btn.disabled = true;
+
+      firebase.database().ref('monitoring/setSuhu').set(suhu).then(() => {
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-check"></i> Tersimpan!';
+          setTimeout(() => {
+            btn.innerHTML = 'SET';
+            btn.disabled = false;
+          }, 1500);
+        }, 800);
+      });
+    }
+
+    document.getElementById('tempSlider').addEventListener('input', function () {
+      const preview = document.getElementById('tempPreview');
+      const val = this.value;
+      document.getElementById('tempValue').innerText = val;
+      preview.style.display = 'block';
+      clearTimeout(window.tempPreviewTimer);
+      window.tempPreviewTimer = setTimeout(() => {
+        preview.style.display = 'none';
+      }, 2000);
+    });
+
+    function feedFish() {
+      if (!perangkatOnline) return;
+
+      const btn = document.querySelector('.feed-btn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memberi Makan...';
+      btn.classList.add('feeding');
+      btn.disabled = true;
+
+      firebase.database().ref('kontrol/pakan').set(true).then(() => {
+        let timeoutReached = false;
+
+        const fallbackTimeout = setTimeout(() => {
+          timeoutReached = true;
+          firebase.database().ref('kontrol/pakan').set(false);
+          btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Gagal!';
+          btn.classList.remove('feeding');
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-utensils"></i> Beri Makan';
+            btn.disabled = false;
+          }, 2000);
+        }, 8000);
+
+        const pakanRef = firebase.database().ref('kontrol/pakan');
+        const listener = pakanRef.on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val === false && !timeoutReached) {
+            clearTimeout(fallbackTimeout);
+            pakanRef.off('value', listener);
+            btn.innerHTML = '<i class="fas fa-check"></i> Selesai!';
+            setTimeout(() => {
+              btn.classList.remove('feeding');
+              btn.innerHTML = '<i class="fas fa-utensils"></i> Beri Makan';
+              btn.disabled = false;
+            }, 2000);
+          }
+        });
+      });
+    }
+
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        firebase.auth().signOut().then(() => {
+          sessionStorage.clear();
+          window.location.href = "index.html";
+        });
+      }
+    }
+
+    function updateSwitchItemWidths() {
+      const items = document.querySelectorAll('.switch-item');
+      const total = items.length;
+      const screenWidth = window.innerWidth;
+      let perRow;
+
+      if (total === 1) {
+        perRow = 1;
+      } else if (screenWidth >= 1024 && total % 4 === 0) {
+        perRow = 4;
+      } else {
+        perRow = 2;
+      }
+
+      const percent = 100 / perRow;
+
+      items.forEach(item => {
+        item.style.flex = `1 1 calc(${percent}% - 15px)`;
+        item.style.maxWidth = `calc(${percent}% - 15px)`;
+      });
+    }
+
+    function updateSwitchGridClass() {
+      const grid = document.querySelector('.switch-grid');
+      const itemCount = document.querySelectorAll('.switch-item').length;
+
+      if (window.innerWidth >= 1024 && itemCount % 4 === 0) {
+        grid.classList.add('columns-4');
+      } else {
+        grid.classList.remove('columns-4');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const activeTab = document.querySelector('.tab-section.active');
+      if (activeTab) {
+        const tabId = activeTab.id;
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        
+        navItems.forEach(item => {
+          const onclickAttr = item.getAttribute('onclick');
+          if (onclickAttr && onclickAttr.includes(tabId)) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }
+    });
+
+    window.addEventListener('load', updateSwitchGridClass);
+    window.addEventListener('resize', updateSwitchGridClass);
+
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.tab-section').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      document.getElementById(tabId).classList.add('active');
+
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(nav => {
+        nav.classList.remove('active');
+      });
+      element.classList.add('active');
+    }
+  </script>
+</body>
+</html>

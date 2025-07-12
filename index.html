@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Aquarium - Login</title>
   <link rel="icon" href="assets/img/icon.png" type="image/png">
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style-login.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2196f3" />
 </head>
@@ -15,40 +16,39 @@
     <div class="spinner"></div>
   </div>
 
-  <div class="login-container">
-    <div class="logo">
-      <i class="fas fa-fish"></i>
-    </div>
-    <h1>Smart Aquarium</h1>
-
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="apiKey">API Key</label>
-        <input type="text" id="apiKey" name="apiKey" required />
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="logo">
+        <img src="assets/img/icon.png" alt="Logo Smart Aquarium">
       </div>
-
-      <div class="form-group">
-        <label for="databaseUrl">Database URL</label>
-        <input type="url" id="databaseUrl" name="databaseUrl" required />
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required />
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="input-container">
-          <input type="password" id="password" name="password" required />
-          <i class="fas fa-eye password-toggle" onclick="togglePassword()"></i>
+      <h1>Smart Aquarium</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="apiKey">API Key</label>
+          <input type="text" id="apiKey" name="apiKey" required>
         </div>
-      </div>
 
-      <button type="submit" class="connect-btn">
-        <i class="fas fa-plug"></i> Connect
-      </button>
-    </form>
+        <div class="form-group">
+          <label for="databaseUrl">Database URL</label>
+          <input type="url" id="databaseUrl" name="databaseUrl" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-icon">
+            <input type="password" id="password" name="password" required>
+            <i class="fas fa-eye password-toggle" onclick="togglePassword()"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">Connect</button>
+      </form>
+    </div>
   </div>
 
   <div class="loading-screen" id="loadingScreen">
@@ -66,7 +66,6 @@
     function togglePassword() {
       const passwordInput = document.getElementById('password');
       const toggleIcon = document.querySelector('.password-toggle');
-
       if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -78,7 +77,6 @@
 
     document.getElementById('loginForm').addEventListener('submit', function (e) {
       e.preventDefault();
-
       const apiKey = document.getElementById('apiKey').value;
       const databaseUrl = document.getElementById('databaseUrl').value;
       const email = document.getElementById('email').value;
@@ -93,7 +91,7 @@
       const tempApp = firebase.initializeApp(firebaseConfig, "tempApp");
       const tempAuth = firebase.auth(tempApp);
 
-      const btn = document.querySelector('.connect-btn');
+      const btn = document.querySelector('.btn-login');
       const loading = document.getElementById('loadingScreen');
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
       btn.disabled = true;
@@ -104,7 +102,7 @@
           sessionStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
           sessionStorage.setItem('email', email);
           sessionStorage.setItem('password', password);
-          window.location.href = 'main.html';
+          window.location.href = 'dashboard.html';
         })
         .catch((error) => {
           alert('Login gagal: ' + error.message);
@@ -120,7 +118,7 @@
       const password = sessionStorage.getItem('password');
 
       if (config && email && password) {
-        window.location.href = 'main.html';
+        window.location.href = 'dashboard.html';
         return;
       }
 

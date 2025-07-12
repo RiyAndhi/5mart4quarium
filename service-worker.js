@@ -2,9 +2,9 @@ const CACHE_NAME = 'smart-aquarium-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/main.html',
+  '/dashboard.html',
+  '/assets/css/style-login.css',
   '/assets/css/style.css',
-  '/assets/css/styles.css',
   '/assets/img/icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
